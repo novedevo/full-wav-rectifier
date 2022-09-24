@@ -50,6 +50,36 @@ pub fn skipclip_float(v: Vec<f32>) -> Vec<f32> {
         .collect()
 }
 
+pub fn acc_16(mut v: Vec<i16>) -> Vec<i16> {
+    let mut acc: u16 = 0;
+    for sample in v.iter_mut() {
+        acc += sample.unsigned_abs();
+        acc %= i16::MAX as u16 * 2;
+        *sample = (acc - i16::MAX as u16) as i16
+    }
+    v
+}
+
+pub fn acc_24(mut v: Vec<i32>) -> Vec<i32> {
+    let mut acc = 0;
+    for sample in v.iter_mut() {
+        acc += sample.abs();
+        acc %= I24_MAX * 2;
+        *sample = acc - I24_MAX;
+    }
+    v
+}
+
+pub fn acc_float(mut v: Vec<f32>) -> Vec<f32> {
+    let mut acc = 0.0;
+    for sample in v.iter_mut() {
+        acc += sample.abs();
+        acc %= 2.0;
+        *sample = acc - 1.0
+    }
+    v
+}
+
 fn db_to_amplitude(db: f64) -> f64 {
     10_f64.powf(db / 20.0)
 }
