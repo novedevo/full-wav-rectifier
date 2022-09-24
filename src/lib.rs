@@ -146,7 +146,8 @@ pub fn div_by_previous_float(mut v: Vec<f32>) -> Vec<f32> {
         }
         last = next_last;
     }
-    skipclip_float(v)
+    v
+    // skipclip_float(v)
 }
 
 fn db_to_amplitude(db: f64) -> f64 {
