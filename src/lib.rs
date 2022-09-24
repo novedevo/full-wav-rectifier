@@ -84,7 +84,7 @@ pub fn mul_by_previous_16(mut v: Vec<i16>) -> Vec<i16> {
     let mut last = 1.0;
     for sample in v.iter_mut() {
         let next_last = *sample as f64 / i16::MAX as f64;
-        *sample = (*sample as f64 * last) as i16;
+        *sample = (((*sample as f64 * last) - 0.5) * 2.0) as i16;
         last = next_last;
     }
     v
@@ -95,6 +95,8 @@ pub fn mul_by_previous_24(mut v: Vec<i32>) -> Vec<i32> {
     for sample in v.iter_mut() {
         let next_last = *sample as f64 / I24_MAX as f64;
         *sample = (*sample as f64 * last) as i32;
+        *sample -= I24_MAX / 2;
+        *sample *= 2;
         last = next_last;
     }
     v
@@ -105,6 +107,8 @@ pub fn mul_by_previous_float(mut v: Vec<f32>) -> Vec<f32> {
     for sample in v.iter_mut() {
         let next_last = *sample;
         *sample *= last;
+        *sample -= 0.5;
+        *sample *= 2.0;
         last = next_last;
     }
     v
