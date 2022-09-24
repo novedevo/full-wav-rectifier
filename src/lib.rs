@@ -80,6 +80,71 @@ pub fn acc_float(mut v: Vec<f32>) -> Vec<f32> {
     v
 }
 
+pub fn mul_by_previous_16(mut v: Vec<i16>) -> Vec<i16> {
+    let mut last = 1.0;
+    for sample in v.iter_mut() {
+        let next_last = *sample as f64 / i16::MAX as f64;
+        *sample = (*sample as f64 * last) as i16;
+        last = next_last;
+    }
+    v
+}
+
+pub fn mul_by_previous_24(mut v: Vec<i32>) -> Vec<i32> {
+    let mut last = 1.0;
+    for sample in v.iter_mut() {
+        let next_last = *sample as f64 / I24_MAX as f64;
+        *sample = (*sample as f64 * last) as i32;
+        last = next_last;
+    }
+    v
+}
+
+pub fn mul_by_previous_float(mut v: Vec<f32>) -> Vec<f32> {
+    let mut last = 1.0;
+    for sample in v.iter_mut() {
+        let next_last = *sample;
+        *sample *= last;
+        last = next_last;
+    }
+    v
+}
+
+pub fn div_by_previous_16(mut v: Vec<i16>) -> Vec<i16> {
+    let mut last = 1.0;
+    for sample in v.iter_mut() {
+        let next_last = *sample as f64 / I24_MAX as f64;
+        if last != 0.0 {
+            *sample = (*sample as f64 / last).clamp(-1.0, 1.0) as i16;
+        }
+        last = next_last;
+    }
+    skipclip_16(v)
+}
+pub fn div_by_previous_24(mut v: Vec<i32>) -> Vec<i32> {
+    let mut last = 1.0;
+    for sample in v.iter_mut() {
+        let next_last = *sample as f64 / I24_MAX as f64;
+        if last != 0.0 {
+            *sample = (*sample as f64 / last).clamp(-1.0, 1.0) as i32;
+        }
+        last = next_last;
+    }
+    skipclip_24(v)
+}
+pub fn div_by_previous_float(mut v: Vec<f32>) -> Vec<f32> {
+    let mut last = 1.0;
+    for sample in v.iter_mut() {
+        let next_last = *sample;
+        if last != 0.0 {
+            let calced = *sample / last;
+            *sample = calced.clamp(-1.0, 1.0);
+        }
+        last = next_last;
+    }
+    skipclip_float(v)
+}
+
 fn db_to_amplitude(db: f64) -> f64 {
     10_f64.powf(db / 20.0)
 }
