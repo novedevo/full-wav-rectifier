@@ -1,3 +1,4 @@
+use full_wav_rectifier::*;
 use std::{fs::File, io::Cursor, path::Path};
 
 fn main() {
