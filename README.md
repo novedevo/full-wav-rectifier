@@ -2,7 +2,7 @@
 
 do horrible things to your audio
 
-notably, you can rectify it skipclip it, or accumulate.
+notably, you can rectify, it skipclip it, or accumulate it.
 
 rectification just takes the abs() of the signal, then does some other stuff to make it the same amplitude and zero-offset.
 
