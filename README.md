@@ -2,14 +2,14 @@
 
 do horrible things to your audio
 
-notably, you can rectify, it skipclip it, or accumulate it.
+in particular, you can rectify it, skipclip it, or accumulate it.
 
-rectification just takes the abs() of the signal, then does some other stuff to make it the same amplitude and zero-offset.
+rectification just takes the abs() of the signal, then subtracts a dc offset to recentre the waveform, then amplifies to reobtain a full-scale signal. this is theoretically streamable.
 
 skipclipping is a name i made up for an operation i made up.
-instead of the nerd-based clipping algorithms of saturation, clamping, etc; this straight-up discards all samples that are too loud, then re-amplifies it to be full-scale.
-skipclipping is a weird one, because dropping samples means it will increase frequencies and decrease file length. who needs compression.
+usually clipping clamps the samples at a certain level. skipclipping instead discards all samples that are above a certain threshold, then re-amplifies it to be full-scale. this is not streamable.
+skipclipping is a weird one, because dropping samples means it will increase frequencies and decrease file length in a somewhat unpredictable fashion roughly correlating to the loudness of the input signal.
 
-accumulation has lots of meanings, but here, i say it means the value of each sample is the sum of all the previous samples' abs(), modulo'd into a full-scale signal.
+accumulation means the value of each sample is the sum of all the previous samples' abs(), modulo'd into a full-scale signal. this is theoretically streamable.
 
-if you do any of these operations with integer pcm wavs, there's probably going to be some noise from bit depth conversion. use floats, they're better.
+if you do some of these operations with integer PCM audio, there's probably going to be some noise from bit depth conversion. floats don't have this issue, so for optimum audio quality, i recommend using floats.
