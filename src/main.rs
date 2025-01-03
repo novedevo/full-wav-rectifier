@@ -1,7 +1,7 @@
 use full_wav_rectifier::*;
 use hound::WavWriter;
 
-const CORRUPTED_ERROR: &str = "corrupted wav file: sample bit depth doesn't match header";
+const CORRUPTED_ERROR: &str = "corrupted wav file: sample bit depth doesn't match header or floats aren't within -1.0 and 1.0";
 
 fn main() {
     let input_file = std::env::args()
@@ -16,9 +16,16 @@ fn main() {
         });
         Box::new(iter)
     } else {
-        let iter = reader
-            .into_samples::<f32>()
-            .map(|s| s.expect(CORRUPTED_ERROR) as f64);
+        let iter = reader.into_samples::<f32>().map(|s| {
+            s.and_then(|f| {
+                if f >= -1.0 && f <= 1.0 {
+                    Ok(f)
+                } else {
+                    Err(hound::Error::TooWide)
+                }
+            })
+            .expect(CORRUPTED_ERROR) as f64
+        });
         Box::new(iter)
     };
 
@@ -33,13 +40,26 @@ fn main() {
             }
             "rectify" => {
                 operating = Box::new(operating.map(rectify));
-            },
+            }
             "accumulate" => {
                 let mut accumulator = 0.0f64;
                 operating = Box::new(operating.map(move |sample| {
                     let (sample, newacc) = acc(sample, accumulator);
                     accumulator = newacc;
                     sample
+                }))
+            }
+            "mul_by_previous" | "div_by_previous" => {
+                let mut prev = 1.0;
+                let op = if command == "mul_by_previous" {
+                    mul_by_previous
+                } else {
+                    div_by_previous
+                };
+                operating = Box::new(operating.map(move |sample| {
+                    let retval = op(sample, prev);
+                    prev = sample;
+                    retval
                 }))
             }
             _ => unimplemented!("no support for this operation yet"),
