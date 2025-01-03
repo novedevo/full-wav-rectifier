@@ -1,19 +1,53 @@
 use full_wav_rectifier::*;
-use std::{fs::File, path::Path};
+use hound::WavWriter;
+
+const CORRUPTED_ERROR: &str = "corrupted wav file: sample bit depth doesn't match header";
 
 fn main() {
-    let input_file = std::env::args().nth(1).expect("No input file provided");
-    let mut buf = File::open(input_file).unwrap();
-    let (header, data) = wav::read(&mut buf).expect("Failed to read .wav file");
-    let mut out = File::create(Path::new("data/output_skip.wav")).expect("Failed to create output file");
+    let input_file = std::env::args()
+        .nth(1)
+        .unwrap_or("data/input.wav".to_string()); //.expect("No input file provided");
+    let reader = hound::WavReader::open(input_file).expect("Failed to open input file");
+    let spec = reader.spec();
 
-    let new_data: wav::BitDepth = match data {
-        wav::BitDepth::Eight(_) => unimplemented!("8-bit wav files aren't supported yet. You can upsample then as 16-bit."),
-        wav::BitDepth::Sixteen(d) => skipclip_16(d).into(),
-        wav::BitDepth::TwentyFour(d) => skipclip_24(d).into(),
-        wav::BitDepth::ThirtyTwoFloat(d) => skipclip_float(d).into(),
-        wav::BitDepth::Empty => unimplemented!("Empty .wav file detected. Is something wrong upstream?"),
+    let samples: Box<dyn Iterator<Item=f64>> = if spec.sample_format == hound::SampleFormat::Int {
+        let iter = reader
+            .into_samples::<i32>()
+            .map(|s| {
+                s.expect(CORRUPTED_ERROR) as f64 / 2_i32.pow(spec.bits_per_sample as u32) as f64
+            });
+        Box::new(iter)
+    } else {
+        let iter = reader
+            .into_samples::<f32>()
+            .map(|s| s.expect(CORRUPTED_ERROR) as f64);
+        Box::new(iter)
     };
 
-    wav::write(header, &new_data, &mut out).unwrap();
+    let dsl = std::env::args().nth(3).unwrap();
+    let dsl = dsl.split(",");
+
+    let mut operating: Box<dyn Iterator<Item = f64>> = Box::new(samples.into_iter());
+    for command in dsl {
+        match command {
+            "skipclip" => {
+                operating = Box::new(operating.filter_map(|s| skipclip(s, -3.0)));
+            }
+            "rectify" => {
+                operating = Box::new(operating.map(rectify));
+            }
+            _ => unimplemented!("no support for this operation yet"),
+        }
+    }
+
+    let mut writer = WavWriter::create("data/output.wav", spec).expect("couldn't create output file");
+    for sample in operating {
+        if spec.sample_format == hound::SampleFormat::Int {
+            let sample = (sample * 2_i32.pow(spec.bits_per_sample as u32 - 1) as f64) as i32;
+            writer.write_sample(sample).expect("IO error");
+        } else {
+            writer.write_sample(sample as f32).expect("IO error");
+        }
+    }
+    writer.flush().expect("IO error");
 }
