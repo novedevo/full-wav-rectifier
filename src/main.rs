@@ -10,12 +10,10 @@ fn main() {
     let reader = hound::WavReader::open(input_file).expect("Failed to open input file");
     let spec = reader.spec();
 
-    let samples: Box<dyn Iterator<Item=f64>> = if spec.sample_format == hound::SampleFormat::Int {
-        let iter = reader
-            .into_samples::<i32>()
-            .map(|s| {
-                s.expect(CORRUPTED_ERROR) as f64 / 2_i32.pow(spec.bits_per_sample as u32) as f64
-            });
+    let samples: Box<dyn Iterator<Item = f64>> = if spec.sample_format == hound::SampleFormat::Int {
+        let iter = reader.into_samples::<i32>().map(|s| {
+            s.expect(CORRUPTED_ERROR) as f64 / 2_i32.pow(spec.bits_per_sample as u32) as f64
+        });
         Box::new(iter)
     } else {
         let iter = reader
@@ -35,12 +33,21 @@ fn main() {
             }
             "rectify" => {
                 operating = Box::new(operating.map(rectify));
+            },
+            "accumulate" => {
+                let mut accumulator = 0.0f64;
+                operating = Box::new(operating.map(move |sample| {
+                    let (sample, newacc) = acc(sample, accumulator);
+                    accumulator = newacc;
+                    sample
+                }))
             }
             _ => unimplemented!("no support for this operation yet"),
         }
     }
 
-    let mut writer = WavWriter::create("data/output.wav", spec).expect("couldn't create output file");
+    let mut writer =
+        WavWriter::create("data/output.wav", spec).expect("couldn't create output file");
     for sample in operating {
         if spec.sample_format == hound::SampleFormat::Int {
             let sample = (sample * 2_i32.pow(spec.bits_per_sample as u32 - 1) as f64) as i32;
