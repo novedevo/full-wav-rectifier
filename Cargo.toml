@@ -1,9 +1,4 @@
-[package]
-name = "full-wav-rectifier"
-version = "0.2.0"
-edition = "2021"
+[workspace]
+members = ["repiquemos-cli", "repiquemos"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-hound = "3.5.1"
+resolver = "2"

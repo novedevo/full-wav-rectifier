@@ -3,14 +3,19 @@
 version = 4
 
 [[package]]
-name = "full-wav-rectifier"
-version = "0.2.0"
-dependencies = [
- "hound",
-]
-
-[[package]]
 name = "hound"
 version = "3.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62adaabb884c94955b19907d60019f4e145d091c75345379e70d1ee696f7854f"
+
+[[package]]
+name = "repiquemos"
+version = "0.1.0"
+
+[[package]]
+name = "repiquemos-cli"
+version = "0.1.0"
+dependencies = [
+ "hound",
+ "repiquemos",
+]
