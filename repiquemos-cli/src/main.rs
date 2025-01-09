@@ -1,4 +1,4 @@
-use hound::{WavSpec, WavWriter};
+use hound::WavWriter;
 use repiquemos::*;
 
 const CORRUPTED_ERROR: &str = "corrupted wav file: sample bit depth doesn't match header or floats aren't within -1.0 and 1.0";
