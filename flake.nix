@@ -31,5 +31,12 @@
       }
     );
 
+    apps = forAllSystems (system: {
+      default = {
+        type = "app";
+        program = "${self.packages.${system}.default}/bin/repiquemos";
+      };
+    });
+
   };
 }
