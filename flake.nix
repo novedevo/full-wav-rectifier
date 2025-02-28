@@ -10,11 +10,12 @@
 
   let 
     version = builtins.substring 0 8 self.lastModifiedDate;
-    supportedSystems = ["x86_64-linux"];
+    arches = ["x86_64" "aarch64"];
+    kernels = ["linux" "darwin"];
+    supportedSystems = nixpkgs.lib.concatMap (arch: map (kernel: arch + "-" + kernel) kernels) arches;
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
   in  {
-
     packages = forAllSystems (system:
       let pkgs = nixpkgsFor.${system}; in
       {
