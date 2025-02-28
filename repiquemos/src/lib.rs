@@ -16,6 +16,10 @@ pub fn amplify(sample: f64, amplification_factor: f64) -> f64 {
     ring_mod(sample, amplification_factor)
 }
 
+pub fn amplitude_mod(signal: f64, modulator: f64) -> f64{
+    ring_mod(signal, modulator.abs())
+}
+
 pub fn ring_mod(signal: f64, modulator: f64) -> f64 {
     signal * modulator
 }
