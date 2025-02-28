@@ -19,7 +19,7 @@ fn main() {
         } else {
             let iter = reader.samples::<f32>().map(|s| {
                 s.and_then(|f| {
-                    if f >= -1.0 && f <= 1.0 {
+                    if (-1.0..=1.0).contains(&f) {
                         Ok(f)
                     } else {
                         Err(hound::Error::UnfinishedSample)
