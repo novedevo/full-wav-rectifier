@@ -10,10 +10,13 @@
 
   let 
     version = builtins.substring 0 8 self.lastModifiedDate;
-    arches = ["x86_64" "aarch64"];
-    kernels = ["linux" "darwin"];
-    supportedSystems = nixpkgs.lib.concatMap (arch: map (kernel: arch + "-" + kernel) kernels) arches;
-    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+
+    # build matrix
+    arch = ["x86_64" "aarch64"];
+    kernel = ["linux" "darwin"];
+    supportedSystems = nixpkgs.lib.mapCartesianProduct (x: "${x.arch}-${x.kernel}") {inherit arch kernel;}; # hehe cartesian product
+
+    forAllSystems = nixpkgs.lib.genAttrs supportedSystems; # partial application :3
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
   in  {
     packages = forAllSystems (system:
