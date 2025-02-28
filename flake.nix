@@ -9,7 +9,7 @@
   outputs = { self, nixpkgs }:
 
   let 
-    version = builtins.substring 0 8 self.lastModifiedDate;
+    version = builtins.substring 0 8 self.lastModifiedDate; # e.g. 20240228 for Feb 28th 2024
 
     # build matrix
     arch = ["x86_64" "aarch64"];
@@ -37,6 +37,21 @@
         program = "${self.packages.${system}.default}/bin/repiquemos";
       };
     });
+
+    devShells = forAllSystems (system: 
+      let pkgs = nixpkgsFor.${system};
+      in {
+        default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            rustc 
+            rust-analyzer 
+            rustfmt 
+            vscode-extensions.rust-lang.rust-analyzer
+            clippy
+          ];
+        };
+      }
+      );
 
   };
 }
