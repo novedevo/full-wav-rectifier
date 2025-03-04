@@ -3,10 +3,14 @@
   description = "meow";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";    
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, fenix, nixpkgs }:
 
   let 
 
@@ -19,43 +23,37 @@
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
 
   in  {
-    packages = forAllSystems (system:
-      let pkgs = nixpkgsFor.${system}; in
-      {
-        default = pkgs.rustPlatform.buildRustPackage {
-          pname = "repiquemos";
-          src = pkgs.lib.cleanSource ./.;
-          cargoLock.lockFile = ./Cargo.lock;
-          nativeBuildInputs = [ clippy ];
-          buildInputs = [ clippy ];
-        };
-      }
-    );
-
-    apps = forAllSystems (system: {
-      default = {
-        type = "app";
-        program = "${self.packages.${system}.default}/bin/repiquemos";
-      };
-    });
-
-    # devShells = forAllSystems (system: 
-    #   let 
-    #     pkgs = nixpkgsFor.${system};
-    #   in {
-    #     default = pkgs.mkShell {
-    #       # https://nixos.wiki/wiki/Rust#Shell.nix_example
-    #       RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-    #       buildInputs = with pkgs; [
-    #         rustc 
-    #         rust-analyzer 
-    #         rustfmt 
-    #         vscode-extensions.rust-lang.rust-analyzer
-    #         clippy
-    #       ];
+    # packages = forAllSystems (system:
+    #   let pkgs = nixpkgsFor.${system}; in
+    #   {
+    #     default = pkgs.rustPlatform.buildRustPackage {
+    #       pname = "repiquemos";
+    #       src = pkgs.lib.cleanSource ./.;
+    #       cargoLock.lockFile = ./Cargo.lock;
+    #       nativeBuildInputs = [ pkgs.clippy ];
+    #       buildInputs = [ pkgs.clippy ];
     #     };
     #   }
-    #   );
+    # );
+
+    # apps = forAllSystems (system: {
+    #   default = {
+    #     type = "app";
+    #     program = "${self.packages.${system}.default}/bin/repiquemos";
+    #   };
+    # });
+
+    devShells = forAllSystems (system: 
+      let 
+        pkgs = nixpkgsFor.${system};
+      in {
+        default = pkgs.mkShell {
+          nativeBuildInputs = [
+            fenix.packages.${system}.stable.toolchain
+          ];
+        };
+      }
+      );
 
   };
 }
